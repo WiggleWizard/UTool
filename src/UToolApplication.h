@@ -44,7 +44,6 @@ private:
 	ea::string _loadedProjectFilePath = "";
 	// Contains just the root directory to the loaded project
 	ea::string _loadedProjectRootDir = "";
-	ea::vector<ea::shared_ptr<ToolBase>> _tools;
 
 	ea::shared_ptr<ToolBase> _currentlyFocusedTool = nullptr;
 	ea::shared_ptr<ToolBase> _previouslyFocusedTool = nullptr;

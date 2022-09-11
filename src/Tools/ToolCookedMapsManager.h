@@ -8,7 +8,7 @@
 
 #include <filesystem>
 
-
+REGISTER_TOOL(ToolCookedMapsManager)
 class ToolCookedMapsManager : public ToolBase
 {
 	struct BasicMapInfo

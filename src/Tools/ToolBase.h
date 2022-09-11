@@ -1,8 +1,13 @@
 #pragma once
 
+#include "Toolbox.h"
+
 #include <SkeletonCore/Aliases.h>
 #include <EASTL/string.h>
 
+#define REGISTER_TOOL(T) \
+	class T; \
+	static bool added = Toolbox::AddTool<T>(); \
 
 class ToolBase
 {

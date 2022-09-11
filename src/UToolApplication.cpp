@@ -1,6 +1,7 @@
 #include "UToolApplication.h"
 
 #include "Tools/ToolCookedMapsManager.h"
+#include "Toolbox.h"
 
 #include <SimpleIni.h>
 #include <imgui.h>
@@ -19,10 +20,7 @@ void UToolApplication::Initialize()
 	//_bShowDemoWindow = true;
 
 	logger->info("UTool starting");
-
-	_tools.push_back(ea::make_shared<ToolCookedMapsManager>());
-
-	logger->info("{} available tools", _tools.size());
+	logger->info("{} available tools", Toolbox::availableTools.size());
 }
 
 void UToolApplication::ModifyImGuiIo(ImGuiIO& io)
@@ -93,7 +91,7 @@ void UToolApplication::RenderMenu()
 					_loadedProjectRootDir = _loadedProjectFilePath.substr(0, _loadedProjectFilePath.rfind("\\"));
 					NFD_FreePath(outPath);
 
-					for(const auto& tool : _tools)
+					for(const auto& tool : Toolbox::availableTools)
 					{
 						tool->OnProjectChanged();
 					}
@@ -127,7 +125,7 @@ void UToolApplication::RenderNavigator()
 	if(ImGui::Begin("Navigator", &bOpen, sectionFlags))
 	{
 		int toolIdx = 0;
-		for(const ea::shared_ptr<ToolBase> tool : _tools)
+		for(const ea::shared_ptr<ToolBase> tool : Toolbox::availableTools)
 		{
 			ImGui::TreeNodeEx((void*)(intptr_t)toolIdx, nodeFlags, "%s", tool->ToolTitle().c_str());
 			if(ImGui::IsItemClicked())

@@ -1,6 +1,8 @@
 set(PROJECT_SOURCE_FILES
     "Main.cpp"
     "UToolApplication.cpp"
+    "Toolbox.cpp"
+
     "Tools/ToolCookedMapsManager.cpp")
 
 set(PROJECT_LINK_DIRS
