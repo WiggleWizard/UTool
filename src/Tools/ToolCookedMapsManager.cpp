@@ -1,6 +1,7 @@
 #include "ToolCookedMapsManager.h"
 
 #include "UToolApplication.h"
+#include "ToolHealthCheck.h"
 
 #include <SimpleIni.h>
 #include <imgui.h>
@@ -43,6 +44,15 @@ ToolCookedMapsManager::ToolCookedMapsManager()
 {
 	_ini = ea::make_shared<CSimpleIniA>(false, true, false);
 	_ini->SetSpaces(false);
+}
+
+void ToolCookedMapsManager::Initialize()
+{
+	UToolApplication* app = UToolApplication::GetInstance();
+	if(const ea::shared_ptr<ToolHealthCheck> toolHealthCheck = app->GetTool<ToolHealthCheck>())
+	{
+		toolHealthCheck->onHealthCheck.Connect<&ToolCookedMapsManager::OnHealthCheck>(this);
+	}
 }
 
 void ToolCookedMapsManager::OnProjectChanged()
@@ -112,6 +122,7 @@ void ToolCookedMapsManager::RenderWindowContent()
 {
 	static constexpr ImVec4 colError = ImVec4(1.f, 0.05f, 0.05f, 1.f);
 	static constexpr ImVec4 colWarning = ImVec4(1.f, 0.75f, 0.55f, 1.f);
+	//static bool bEnabled = 
 
 	ImGui::TextUnformatted("Check the maps to be added to the cook");
 
@@ -191,6 +202,11 @@ void ToolCookedMapsManager::RenderWindowContent()
 			OnProjectChanged();
 	}
 	ImGui::EndChild();
+}
+
+void ToolCookedMapsManager::OnHealthCheck()
+{
+	logger->info("Hello WOrld");
 }
 
 void ToolCookedMapsManager::Save()

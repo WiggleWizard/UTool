@@ -4,26 +4,36 @@
 
 #include <EASTL/shared_ptr.h>
 #include <EASTL/vector.h>
+#include <EASTL/map.h>
 
 class ToolBase;
 
 
 class UToolApplication : public SkImGui::ApplicationBaseImGui
 {
+	typedef ea::map<std::size_t, ea::shared_ptr<ToolBase>> ToolMapByType;
+	typedef ea::map<ea::string, ea::shared_ptr<ToolBase>> ToolMapByName;
+
+public:
+	SKELETON_APP_INSTANCE(UToolApplication)
+
 public:
 	enum IniType
 	{
 		INITYPE_DefaultGame
 	};
 
-public:
-	SKELETON_APP_INSTANCE(UToolApplication)
-
 	virtual ea::string& GetWindowTitle() override
 	{
 		static ea::string title("UTool");
 		return title;
 	}
+
+	const ToolMapByType& GetAvailableTools() const;
+
+	template<class T>
+	ea::shared_ptr<T> GetTool() const;
+	ea::shared_ptr<ToolBase> GetTool(const ea::string& toolName) const;
 
 	virtual void Initialize() override;
 	virtual void ModifyImGuiIo(ImGuiIO& io) override;
@@ -40,6 +50,12 @@ private:
 	void RenderStatusBar();
 
 private:
+	// 2 maps here for easier and faster referral to maps by either type or name
+	// Available tools by type
+	ToolMapByType _availableTools = {};
+	// Available tools by tool name
+	ToolMapByName _availableToolsByName = {};
+
 	// Contains the full file path to the currently loaded .uproject
 	ea::string _loadedProjectFilePath = "";
 	// Contains just the root directory to the loaded project
@@ -52,3 +68,9 @@ private:
 	float _sidebarWidth = 250;
 	float _statusBarHeight = 20;
 };
+
+template <class T>
+ea::shared_ptr<T> UToolApplication::GetTool() const
+{
+	return ea::dynamic_shared_pointer_cast<T>(_availableTools.at(typeid(T).hash_code()));
+}

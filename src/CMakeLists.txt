@@ -2,8 +2,12 @@ set(PROJECT_SOURCE_FILES
     "Main.cpp"
     "UToolApplication.cpp"
     "Toolbox.cpp"
+    "Tools/ToolBase.cpp"
 
-    "Tools/ToolCookedMapsManager.cpp")
+    "Tools/ToolCookedMapsManager.cpp"
+    "Tools/ToolPluginGenerator.cpp"
+    "Tools/ToolPAKInspector.cpp"
+    "Tools/ToolHealthCheck.cpp")
 
 set(PROJECT_LINK_DIRS
     ${PROJECT_SOURCE_DIR}/include)

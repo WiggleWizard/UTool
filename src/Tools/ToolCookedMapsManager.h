@@ -8,7 +8,9 @@
 
 #include <filesystem>
 
-REGISTER_TOOL(ToolCookedMapsManager)
+#include "ToolCookedMapsManager.h"
+
+
 class ToolCookedMapsManager : public ToolBase
 {
 	struct BasicMapInfo
@@ -19,24 +21,16 @@ class ToolCookedMapsManager : public ToolBase
 	};
 
 public:
+	TOOL("MapCookManager", "Map Cook Manager")
+
 	ToolCookedMapsManager();
 
-	const ea::string& ToolName() const override
-	{
-		static ea::string toolName = "MapCookManager";
-		return toolName;
-	}
-
-	const ea::string& ToolTitle() const override
-	{
-		static ea::string toolTitle = "Map Cook Manager";
-		return toolTitle;
-	}
-
+	void Initialize() override;
 	void OnProjectChanged() override;
 	void RenderWindowContent() override;
 
 private:
+	void OnHealthCheck();
 	void Save();
 
 	std::filesystem::path ParseMapIniStringToFsPath(const ea::string& inDir);
@@ -63,3 +57,4 @@ private:
 	 */
 	ea::map<std::filesystem::path, BasicMapInfo> _mapListing;
 };
+REGISTER_TOOL_FACTORY(CookedMapsManager)

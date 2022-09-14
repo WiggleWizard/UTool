@@ -2,6 +2,7 @@
 
 #include "Tools/ToolCookedMapsManager.h"
 #include "Toolbox.h"
+#include "Tools/ToolBase.h"
 
 #include <SimpleIni.h>
 #include <imgui.h>
@@ -13,14 +14,50 @@ LOGGER(logger, UToolApplication)
 constexpr ImGuiWindowFlags sectionFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
 
 
+const UToolApplication::ToolMapByType& UToolApplication::GetAvailableTools() const
+{
+	return _availableTools;
+}
+
+ea::shared_ptr<ToolBase> UToolApplication::GetTool(const ea::string& toolName) const
+{
+	return _availableToolsByName.at(toolName);
+}
+
 void UToolApplication::Initialize()
 {
 	NFD_Init();
 
 	//_bShowDemoWindow = true;
 
+	// Construct the tool instances from the factories
+	for(const Toolbox::ToolFactory& toolFactory : Toolbox::availableToolFactories)
+	{
+		// Construct a new tool using the tool factory
+		auto newTool = ea::shared_ptr<ToolBase>(toolFactory());
+		if(newTool == nullptr)
+		{
+			logger->error("Tool factory return nullptr");
+			continue;
+		}
+
+		const type_info& typeInfo = typeid(*newTool);
+		std::size_t t = typeid(*newTool).hash_code();
+
+		// We want to map by type and by name for super easy access to available tools when
+		// using type or name
+		_availableTools.insert({ t, newTool});
+		_availableToolsByName.insert({ newTool->GetToolTitle(), newTool });
+	}
+
+	// Initialize each tool, to give them a chance to hook into other processes/tools
+	for(const auto& [typeId, tool] : _availableTools)
+	{
+		tool->Initialize();
+	}
+
 	logger->info("UTool starting");
-	logger->info("{} available tools", Toolbox::availableTools.size());
+	logger->info("{} available tools", _availableTools.size());
 }
 
 void UToolApplication::ModifyImGuiIo(ImGuiIO& io)
@@ -91,7 +128,7 @@ void UToolApplication::RenderMenu()
 					_loadedProjectRootDir = _loadedProjectFilePath.substr(0, _loadedProjectFilePath.rfind("\\"));
 					NFD_FreePath(outPath);
 
-					for(const auto& tool : Toolbox::availableTools)
+					for(const auto& [typeId, tool] : _availableTools)
 					{
 						tool->OnProjectChanged();
 					}
@@ -115,23 +152,30 @@ void UToolApplication::RenderMenu()
 
 void UToolApplication::RenderNavigator()
 {
+	static bool bOpen = true;
 	const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x, mainViewport->WorkPos.y + _menuHeight));
 	ImGui::SetNextWindowSize(ImVec2(_sidebarWidth, mainViewport->WorkSize.y - _menuHeight - _statusBarHeight));
 
 	constexpr ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 	
-	static bool bOpen = true;
 	if(ImGui::Begin("Navigator", &bOpen, sectionFlags))
 	{
-		int toolIdx = 0;
-		for(const ea::shared_ptr<ToolBase> tool : Toolbox::availableTools)
+		if(ImGui::CollapsingHeader("Specific", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::TreeNodeEx((void*)(intptr_t)toolIdx, nodeFlags, "%s", tool->ToolTitle().c_str());
-			if(ImGui::IsItemClicked())
-				_currentlyFocusedTool = tool;
+			int toolIdx = 0;
+			for(const auto& [typeId, tool] : _availableTools)
+			{
+				ImGui::TreeNodeEx((void*)(intptr_t)toolIdx, nodeFlags, "%s", tool->GetToolTitle().c_str());
+				if(ImGui::IsItemClicked())
+					_currentlyFocusedTool = tool;
 
-			++toolIdx;
+				++toolIdx;
+			}
+		}
+
+		if(ImGui::CollapsingHeader("General", ImGuiTreeNodeFlags_DefaultOpen))
+		{
 		}
 	}
 	ImGui::End();
